@@ -232,11 +232,11 @@ async function clearLines() {
     // エフェクトの完了を待つ
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    // ラインを消去して得点を加算
-    linesToClear.forEach(y => {
-        board.splice(y, 1);
-        board.unshift(Array(BOARD_WIDTH).fill(0));
-    });
+    // 全ての消去対象ラインを一度に消去
+    const newBoard = board.filter((_, index) => !linesToClear.includes(index));
+    // 消去したライン数分の新しい行を追加
+    const newLines = Array(clearedLines).fill().map(() => Array(BOARD_WIDTH).fill(0));
+    board = [...newLines, ...newBoard];
 
     // スコアを更新
     const basePoints = [0, 100, 300, 500, 800]; // 0, 1, 2, 3, 4ライン消しの点数
