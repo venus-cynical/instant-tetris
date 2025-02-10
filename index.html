@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>シンプルテトリス</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -25,6 +26,10 @@
         <div class="info">
             <p>スコア: <span id="score">0</span></p>
             <p class="controls">HOLD: Shift キー</p>
+            <p class="touch-controls">
+                ← スライドでブロック移動<br>
+                タップで回転
+            </p>
             <button onclick="startGame()">ゲーム開始</button>
             <button onclick="togglePause()" id="pause-btn">一時停止</button>
         </div>

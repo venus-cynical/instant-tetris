@@ -11,6 +11,11 @@ let score = 0;
 let gameInterval = null;
 let isPaused = false;
 
+// タッチ操作のための変数
+let touchStartX = null;
+let touchStartY = null;
+const SWIPE_THRESHOLD = 30; // スワイプを検知する最小距離（ピクセル）
+
 const COLORS = [
     '#00f0f0', // シアン (I)
     '#f0f000', // イエロー (O)
@@ -171,15 +176,72 @@ function mergePiece() {
     canHold = true;
 }
 
-function clearLines() {
+async function clearLines() {
+    let clearedLines = 0;
+    const linesToClear = [];
+
+    // 消去するラインを特定
     for (let y = BOARD_HEIGHT - 1; y >= 0; y--) {
         if (board[y].every(cell => cell !== 0)) {
-            board.splice(y, 1);
-            board.unshift(Array(BOARD_WIDTH).fill(0));
-            score += 100;
-            document.getElementById('score').textContent = score;
+            linesToClear.push(y);
+            clearedLines++;
         }
     }
+
+    if (clearedLines === 0) return;
+
+    // ラインクリアエフェクトを表示
+    const gameBoard = document.getElementById('game-board');
+    const blocks = gameBoard.getElementsByClassName('tetromino');
+
+    // 消去するラインのブロックにエフェクトを適用
+    Array.from(blocks).forEach(block => {
+        const blockY = parseInt(block.style.top) / BLOCK_SIZE;
+        if (linesToClear.includes(blockY)) {
+            block.classList.add('clearing');
+            
+            // 光の粒子エフェクトを追加
+            for (let i = 0; i < 5; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.style.left = block.style.left;
+                sparkle.style.top = block.style.top;
+                sparkle.style.transform = `translate(${Math.random() * 30 - 15}px, ${Math.random() * 30 - 15}px)`;
+                gameBoard.appendChild(sparkle);
+                
+                // エフェクト終了後に要素を削除
+                setTimeout(() => sparkle.remove(), 500);
+            }
+        }
+    });
+
+    // テトリス達成時の特別エフェクト
+    if (clearedLines === 4) {
+        const tetrisText = document.createElement('div');
+        tetrisText.className = 'tetris-text';
+        tetrisText.textContent = 'TETRIS!!';
+        tetrisText.style.left = '50%';
+        tetrisText.style.top = '50%';
+        tetrisText.style.transform = 'translate(-50%, -50%)';
+        gameBoard.appendChild(tetrisText);
+
+        // テキストエフェクト終了後に要素を削除
+        setTimeout(() => tetrisText.remove(), 1500);
+    }
+
+    // エフェクトの完了を待つ
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // ラインを消去して得点を加算
+    linesToClear.forEach(y => {
+        board.splice(y, 1);
+        board.unshift(Array(BOARD_WIDTH).fill(0));
+    });
+
+    // スコアを更新
+    const basePoints = [0, 100, 300, 500, 800]; // 0, 1, 2, 3, 4ライン消しの点数
+    score += basePoints[clearedLines];
+    document.getElementById('score').textContent = score;
 }
 
 function gameLoop() {
@@ -302,4 +364,84 @@ document.addEventListener('keydown', (e) => {
             holdCurrentPiece();
             break;
     }
-}); 
+});
+
+// タッチイベントの処理を追加
+document.getElementById('game-board').addEventListener('touchstart', (e) => {
+    if (!currentPiece || isPaused) return;
+    
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    
+    // タップ開始時のデフォルトの動作を防ぐ
+    e.preventDefault();
+});
+
+document.getElementById('game-board').addEventListener('touchmove', (e) => {
+    if (!currentPiece || isPaused || touchStartX === null) return;
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+    
+    // 横方向のスワイプ
+    if (Math.abs(deltaX) > SWIPE_THRESHOLD) {
+        const direction = deltaX > 0 ? 1 : -1;
+        if (isValidMove(currentPiece, direction, 0)) {
+            currentPiece.x += direction;
+            touchStartX = touch.clientX; // 新しい開始位置を設定
+            drawBoard();
+        }
+    }
+    
+    // 下方向のスワイプ
+    if (deltaY > SWIPE_THRESHOLD) {
+        if (isValidMove(currentPiece, 0, 1)) {
+            currentPiece.y++;
+            touchStartY = touch.clientY; // 新しい開始位置を設定
+            drawBoard();
+        }
+    }
+    
+    // タッチ移動時のデフォルトの動作を防ぐ
+    e.preventDefault();
+});
+
+document.getElementById('game-board').addEventListener('touchend', (e) => {
+    if (!currentPiece || isPaused) return;
+    
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+    
+    // タップ（小さな移動）として判定
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD && Math.abs(deltaY) < SWIPE_THRESHOLD) {
+        const rotated = {
+            shape: currentPiece.shape[0].map((_, i) =>
+                currentPiece.shape.map(row => row[i]).reverse()
+            ),
+            x: currentPiece.x,
+            y: currentPiece.y,
+            color: currentPiece.color
+        };
+        if (isValidMove(rotated, 0, 0)) {
+            currentPiece.shape = rotated.shape;
+            drawBoard();
+        }
+    }
+    
+    // タッチ終了時の状態をリセット
+    touchStartX = null;
+    touchStartY = null;
+    
+    // タッチ終了時のデフォルトの動作を防ぐ
+    e.preventDefault();
+});
+
+// ダブルタップによるズームを防止
+document.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 1) {
+        e.preventDefault();
+    }
+}, { passive: false }); 
