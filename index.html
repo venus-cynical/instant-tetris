@@ -7,9 +7,24 @@
 </head>
 <body>
     <div class="container">
-        <div id="game-board"></div>
+        <div class="game-container">
+            <div class="side-panel">
+                <div class="hold-box">
+                    <p>HOLD</p>
+                    <div id="hold-piece"></div>
+                </div>
+            </div>
+            <div id="game-board"></div>
+            <div class="side-panel">
+                <div class="next-box">
+                    <p>NEXT</p>
+                    <div id="next-piece"></div>
+                </div>
+            </div>
+        </div>
         <div class="info">
             <p>スコア: <span id="score">0</span></p>
+            <p class="controls">HOLD: Shift キー</p>
             <button onclick="startGame()">ゲーム開始</button>
             <button onclick="togglePause()" id="pause-btn">一時停止</button>
         </div>

@@ -1,9 +1,12 @@
 const BOARD_WIDTH = 10;
 const BOARD_HEIGHT = 20;
-const BLOCK_SIZE = 30;
+const BLOCK_SIZE = 24;
 
 let board = Array(BOARD_HEIGHT).fill().map(() => Array(BOARD_WIDTH).fill(0));
 let currentPiece = null;
+let nextPiece = null;
+let holdPiece = null;
+let canHold = true;
 let score = 0;
 let gameInterval = null;
 let isPaused = false;
@@ -100,6 +103,63 @@ function isValidMove(piece, offsetX, offsetY) {
     });
 }
 
+function drawPreviewPiece(piece, element, blockSize = 18) {
+    if (!piece) {
+        element.innerHTML = '';
+        return;
+    }
+
+    element.innerHTML = '';
+    const offsetX = (element.offsetWidth - piece.shape[0].length * blockSize) / 2;
+    const offsetY = (element.offsetHeight - piece.shape.length * blockSize) / 2;
+
+    piece.shape.forEach((row, y) => {
+        row.forEach((value, x) => {
+            if (value) {
+                const block = document.createElement('div');
+                block.className = 'preview-tetromino';
+                block.style.left = offsetX + x * blockSize + 'px';
+                block.style.top = offsetY + y * blockSize + 'px';
+                block.style.width = blockSize + 'px';
+                block.style.height = blockSize + 'px';
+                block.style.background = `linear-gradient(45deg, ${piece.color}, ${adjustBrightness(piece.color, 40)})`;
+                block.style.borderColor = adjustBrightness(piece.color, 60);
+                element.appendChild(block);
+            }
+        });
+    });
+}
+
+function holdCurrentPiece() {
+    if (!canHold || !currentPiece) return;
+
+    const holdElement = document.getElementById('hold-piece');
+    const tempPiece = {
+        shape: currentPiece.shape,
+        color: currentPiece.color
+    };
+
+    if (!holdPiece) {
+        holdPiece = tempPiece;
+        currentPiece = nextPiece;
+        nextPiece = createPiece();
+    } else {
+        const temp = holdPiece;
+        holdPiece = tempPiece;
+        currentPiece = {
+            shape: temp.shape,
+            x: Math.floor((BOARD_WIDTH - temp.shape[0].length) / 2),
+            y: 0,
+            color: temp.color
+        };
+    }
+
+    canHold = false;
+    drawPreviewPiece(holdPiece, holdElement);
+    drawPreviewPiece(nextPiece, document.getElementById('next-piece'));
+    drawBoard();
+}
+
 function mergePiece() {
     currentPiece.shape.forEach((row, y) => {
         row.forEach((value, x) => {
@@ -108,6 +168,7 @@ function mergePiece() {
             }
         });
     });
+    canHold = true;
 }
 
 function clearLines() {
@@ -123,7 +184,9 @@ function clearLines() {
 
 function gameLoop() {
     if (!currentPiece) {
-        currentPiece = createPiece();
+        currentPiece = nextPiece;
+        nextPiece = createPiece();
+        drawPreviewPiece(nextPiece, document.getElementById('next-piece'));
         if (!isValidMove(currentPiece, 0, 0)) {
             gameOver();
             return;
@@ -141,8 +204,20 @@ function gameLoop() {
     drawBoard();
 }
 
-function gameOver() {
+async function gameOver() {
     clearInterval(gameInterval);
+    
+    // ゲームオーバーエフェクトを実行
+    const gameBoard = document.getElementById('game-board');
+    const blocks = gameBoard.getElementsByClassName('tetromino');
+    
+    // すべてのブロックに同時に消滅エフェクトを適用
+    Array.from(blocks).forEach(block => {
+        block.classList.add('disappearing');
+    });
+    
+    // アニメーション完了を待ってからアラートを表示
+    await new Promise(resolve => setTimeout(resolve, 600));
     alert('ゲームオーバー！ スコア: ' + score);
 }
 
@@ -150,11 +225,18 @@ function startGame() {
     board = Array(BOARD_HEIGHT).fill().map(() => Array(BOARD_WIDTH).fill(0));
     score = 0;
     document.getElementById('score').textContent = score;
-    currentPiece = null;
+    currentPiece = createPiece();
+    nextPiece = createPiece();
+    holdPiece = null;
+    canHold = true;
     isPaused = false;
     document.getElementById('pause-btn').textContent = '一時停止';
     if (gameInterval) clearInterval(gameInterval);
     gameInterval = setInterval(gameLoop, 500);
+    
+    // 初期表示
+    drawPreviewPiece(nextPiece, document.getElementById('next-piece'));
+    drawPreviewPiece(holdPiece, document.getElementById('hold-piece'));
 }
 
 function togglePause() {
@@ -174,7 +256,7 @@ function togglePause() {
 }
 
 document.addEventListener('keydown', (e) => {
-    if (!currentPiece || isPaused) return;  // ポーズ中はキー入力を無視
+    if (!currentPiece || isPaused) return;
 
     switch (e.key) {
         case 'ArrowLeft':
@@ -207,6 +289,17 @@ document.addEventListener('keydown', (e) => {
                 currentPiece.shape = rotated.shape;
                 drawBoard();
             }
+            break;
+        case ' ': // スペースキー
+            while (isValidMove(currentPiece, 0, 1)) {
+                currentPiece.y++;
+                score += 1; // ハードドロップのボーナススコア
+            }
+            document.getElementById('score').textContent = score;
+            drawBoard();
+            break;
+        case 'Shift': // HOLDキー
+            holdCurrentPiece();
             break;
     }
 }); 
