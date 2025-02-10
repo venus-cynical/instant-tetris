@@ -345,7 +345,8 @@ document.addEventListener('keydown', (e) => {
                     currentPiece.shape.map(row => row[i]).reverse()
                 ),
                 x: currentPiece.x,
-                y: currentPiece.y
+                y: currentPiece.y,
+                color: currentPiece.color
             };
             if (isValidMove(rotated, 0, 0)) {
                 currentPiece.shape = rotated.shape;
@@ -353,6 +354,7 @@ document.addEventListener('keydown', (e) => {
             }
             break;
         case ' ': // スペースキー
+            e.preventDefault(); // デフォルトの動作を防止
             while (isValidMove(currentPiece, 0, 1)) {
                 currentPiece.y++;
                 score += 1; // ハードドロップのボーナススコア
