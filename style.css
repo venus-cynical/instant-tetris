@@ -231,19 +231,63 @@ button:hover {
 /* Mobile-specific styles */
 @media (max-width: 768px) {
     :root {
-        --block-size: min(5vw, 24px);
+        --block-size: min(4.5vw, 24px);
+    }
+
+    .container {
+        padding: 8px;
+        max-width: 98vw;
     }
 
     .game-container {
-        gap: 8px;
+        gap: 4px;
     }
 
     .side-panel {
-        gap: 8px;
+        gap: 4px;
+        width: calc(var(--block-size) * 4);
+    }
+
+    #game-board {
+        width: calc(var(--block-size) * 10);
+        height: calc(var(--block-size) * 20);
+        border: 2px solid #00f;
+    }
+
+    .hold-box, .next-box {
+        padding: 4px;
+        border: 1px solid #00f;
+    }
+
+    #hold-piece, #next-piece {
+        width: calc(var(--block-size) * 3);
+        height: calc(var(--block-size) * 3);
+    }
+
+    .tetromino {
+        width: var(--block-size);
+        height: var(--block-size);
+        border: 1px solid #0ff;
+    }
+
+    .preview-tetromino {
+        width: calc(var(--block-size) * 0.75);
+        height: calc(var(--block-size) * 0.75);
+        border: 1px solid #0ff;
     }
 
     .controls {
-        display: none; /* キーボード操作の説明を非表示 */
+        display: none;
+    }
+
+    .info {
+        margin-top: 8px;
+    }
+
+    button {
+        padding: 6px 12px;
+        margin: 0 4px;
+        border: 1px solid #00f;
     }
 }
 
