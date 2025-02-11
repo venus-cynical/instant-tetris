@@ -302,17 +302,21 @@ function startGame() {
 }
 
 function togglePause() {
-    if (!gameInterval) return; // ゲームが開始されていない場合は何もしない
+    if (!currentPiece || isPaused) return; // ゲームが開始されていない場合は何もしない
     
     isPaused = !isPaused;
     const pauseBtn = document.getElementById('pause-btn');
     
     if (isPaused) {
-        clearInterval(gameInterval);
-        gameInterval = null;
+        if (gameInterval) {
+            clearInterval(gameInterval);
+            gameInterval = null;
+        }
         pauseBtn.textContent = '再開';
     } else {
-        gameInterval = setInterval(gameLoop, 500);
+        if (!gameInterval) {
+            gameInterval = setInterval(gameLoop, 500);
+        }
         pauseBtn.textContent = '一時停止';
     }
 }
@@ -446,4 +450,10 @@ document.addEventListener('touchstart', (e) => {
     if (e.touches.length > 1) {
         e.preventDefault();
     }
-}, { passive: false }); 
+}, { passive: false });
+
+// モバイル用のHOLD機能
+function mobileHold() {
+    if (!currentPiece || isPaused) return;
+    holdCurrentPiece();
+} 

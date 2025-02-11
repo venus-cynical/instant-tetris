@@ -231,31 +231,32 @@ button:hover {
 /* Mobile-specific styles */
 @media (max-width: 768px) {
     :root {
-        --block-size: min(4.5vw, 24px);
+        --block-size: min(4vw, 24px);
     }
 
     .container {
-        padding: 8px;
-        max-width: 98vw;
+        padding: 4px;
+        max-width: 96vw;
+        max-height: 96vh;
     }
 
     .game-container {
-        gap: 4px;
+        gap: 2px;
     }
 
     .side-panel {
-        gap: 4px;
+        gap: 2px;
         width: calc(var(--block-size) * 4);
     }
 
     #game-board {
         width: calc(var(--block-size) * 10);
         height: calc(var(--block-size) * 20);
-        border: 2px solid #00f;
+        border: 1px solid #00f;
     }
 
     .hold-box, .next-box {
-        padding: 4px;
+        padding: 2px;
         border: 1px solid #00f;
     }
 
@@ -289,6 +290,32 @@ button:hover {
         margin: 0 4px;
         border: 1px solid #00f;
     }
+
+    .mobile-controls {
+        display: flex;
+        justify-content: center;
+        margin-top: 8px;
+    }
+
+    .mobile-controls button {
+        background-color: rgba(0, 0, 255, 0.2);
+        border: 1px solid #00f;
+        color: #0ff;
+        padding: 8px 16px;
+        font-size: min(14px, 4vw);
+        text-shadow: 0 0 5px #0ff;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+
+    .mobile-controls button:active {
+        background-color: rgba(0, 255, 255, 0.3);
+        transform: scale(0.95);
+    }
+}
+
+/* デスクトップではモバイルコントロールを非表示 */
+.mobile-controls {
+    display: none;
 }
 
 /* Touch controls */
