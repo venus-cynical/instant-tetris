@@ -228,6 +228,34 @@ button:hover {
     text-shadow: 0 0 5px #0ff;
 }
 
+.controls-guide {
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 2px solid #00f;
+    padding: 8px;
+    box-shadow: inset 0 0 5px #00f;
+    margin-top: 12px;
+}
+
+.controls-guide p {
+    margin: 0 0 8px 0;
+    font-size: min(10px, 3vw);
+    color: #0ff;
+    text-align: center;
+}
+
+.controls-guide ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.controls-guide li {
+    font-size: min(10px, 3vw);
+    color: #0ff;
+    margin: 4px 0;
+    text-shadow: 0 0 5px #0ff;
+}
+
 /* Mobile-specific styles */
 @media (max-width: 768px) {
     :root {
@@ -310,6 +338,10 @@ button:hover {
     .mobile-controls button:active {
         background-color: rgba(0, 255, 255, 0.3);
         transform: scale(0.95);
+    }
+
+    .controls-guide {
+        display: none;
     }
 }
 
