@@ -284,21 +284,31 @@ async function gameOver() {
 }
 
 function startGame() {
+    // ゲームの状態をリセット
     board = Array(BOARD_HEIGHT).fill().map(() => Array(BOARD_WIDTH).fill(0));
     score = 0;
     document.getElementById('score').textContent = score;
+    
+    // 新しいピースを生成
     currentPiece = createPiece();
     nextPiece = createPiece();
     holdPiece = null;
     canHold = true;
+    
+    // 一時停止状態をリセット
     isPaused = false;
     document.getElementById('pause-btn').textContent = '一時停止';
-    if (gameInterval) clearInterval(gameInterval);
+    
+    // 既存のインターバルをクリアして新しいインターバルを設定
+    if (gameInterval) {
+        clearInterval(gameInterval);
+    }
     gameInterval = setInterval(gameLoop, 500);
     
-    // 初期表示
+    // 初期表示を更新
     drawPreviewPiece(nextPiece, document.getElementById('next-piece'));
     drawPreviewPiece(holdPiece, document.getElementById('hold-piece'));
+    drawBoard();
 }
 
 function togglePause() {
@@ -313,7 +323,6 @@ function togglePause() {
         gameInterval = null;
         pauseBtn.textContent = '再開';
     } else {
-        // 再開時は必ず新しいインターバルを設定
         gameInterval = setInterval(gameLoop, 500);
         pauseBtn.textContent = '一時停止';
     }
@@ -387,9 +396,9 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// タッチイベントの処理を追加
+// タッチイベントの処理を修正
 document.querySelector('.container').addEventListener('touchstart', (e) => {
-    if (!currentPiece) return;
+    if (!currentPiece || isPaused) return;
     
     const touch = e.touches[0];
     touchStartX = touch.clientX;
@@ -400,7 +409,7 @@ document.querySelector('.container').addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 document.querySelector('.container').addEventListener('touchmove', (e) => {
-    if (!currentPiece) return;
+    if (!currentPiece || isPaused) return;
     
     const touch = e.touches[0];
     const deltaX = touch.clientX - touchStartX;
@@ -411,7 +420,7 @@ document.querySelector('.container').addEventListener('touchmove', (e) => {
         const direction = deltaX > 0 ? 1 : -1;
         if (isValidMove(currentPiece, direction, 0)) {
             currentPiece.x += direction;
-            touchStartX = touch.clientX; // 新しい開始位置を設定
+            touchStartX = touch.clientX;
             drawBoard();
         }
     }
@@ -420,23 +429,21 @@ document.querySelector('.container').addEventListener('touchmove', (e) => {
     if (deltaY > SWIPE_THRESHOLD) {
         if (isValidMove(currentPiece, 0, 1)) {
             currentPiece.y++;
-            touchStartY = touch.clientY; // 新しい開始位置を設定
+            touchStartY = touch.clientY;
             drawBoard();
         }
     }
     
-    // タッチ移動時のデフォルトの動作を防ぐ
     e.preventDefault();
 }, { passive: false });
 
 document.querySelector('.container').addEventListener('touchend', (e) => {
-    if (!currentPiece) return;
+    if (!currentPiece || isPaused) return;
     
     const touch = e.changedTouches[0];
     const deltaX = touch.clientX - touchStartX;
     const deltaY = touch.clientY - touchStartY;
     
-    // タップ（小さな移動）として判定
     if (Math.abs(deltaX) < SWIPE_THRESHOLD && Math.abs(deltaY) < SWIPE_THRESHOLD) {
         const rotated = {
             shape: currentPiece.shape[0].map((_, i) =>
@@ -452,11 +459,8 @@ document.querySelector('.container').addEventListener('touchend', (e) => {
         }
     }
     
-    // タッチ終了時の状態をリセット
     touchStartX = null;
     touchStartY = null;
-    
-    // タッチ終了時のデフォルトの動作を防ぐ
     e.preventDefault();
 }, { passive: false });
 
