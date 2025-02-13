@@ -302,26 +302,30 @@ function startGame() {
 }
 
 function togglePause() {
-    if (!currentPiece || isPaused) return; // ゲームが開始されていない場合は何もしない
+    // ゲームが開始されていない場合は何もしない
+    if (!gameInterval && !isPaused) return;
     
     isPaused = !isPaused;
     const pauseBtn = document.getElementById('pause-btn');
     
     if (isPaused) {
-        if (gameInterval) {
-            clearInterval(gameInterval);
-            gameInterval = null;
-        }
+        clearInterval(gameInterval);
+        gameInterval = null;
         pauseBtn.textContent = '再開';
     } else {
-        if (!gameInterval) {
-            gameInterval = setInterval(gameLoop, 500);
-        }
+        // 再開時は必ず新しいインターバルを設定
+        gameInterval = setInterval(gameLoop, 500);
         pauseBtn.textContent = '一時停止';
     }
 }
 
 document.addEventListener('keydown', (e) => {
+    // 一時停止中はスペースキーでの再開を許可
+    if (isPaused && e.key === ' ') {
+        togglePause();
+        return;
+    }
+    
     if (!currentPiece || isPaused) return;
 
     switch (e.key) {
@@ -359,12 +363,23 @@ document.addEventListener('keydown', (e) => {
             break;
         case ' ': // スペースキー
             e.preventDefault(); // デフォルトの動作を防止
+            if (!currentPiece) return; // 現在のピースがない場合は何もしない
+            
+            let moved = false;
             while (isValidMove(currentPiece, 0, 1)) {
                 currentPiece.y++;
                 score += 1; // ハードドロップのボーナススコア
+                moved = true;
             }
-            document.getElementById('score').textContent = score;
-            drawBoard();
+            
+            if (moved) {
+                document.getElementById('score').textContent = score;
+                drawBoard();
+                // ハードドロップ後に自動的にピースを固定
+                mergePiece();
+                clearLines();
+                currentPiece = null;
+            }
             break;
         case 'Shift': // HOLDキー
             holdCurrentPiece();
@@ -373,8 +388,8 @@ document.addEventListener('keydown', (e) => {
 });
 
 // タッチイベントの処理を追加
-document.getElementById('game-board').addEventListener('touchstart', (e) => {
-    if (!currentPiece || isPaused) return;
+document.querySelector('.container').addEventListener('touchstart', (e) => {
+    if (isPaused) return;
     
     const touch = e.touches[0];
     touchStartX = touch.clientX;
@@ -382,10 +397,10 @@ document.getElementById('game-board').addEventListener('touchstart', (e) => {
     
     // タップ開始時のデフォルトの動作を防ぐ
     e.preventDefault();
-});
+}, { passive: false });
 
-document.getElementById('game-board').addEventListener('touchmove', (e) => {
-    if (!currentPiece || isPaused || touchStartX === null) return;
+document.querySelector('.container').addEventListener('touchmove', (e) => {
+    if (isPaused) return;
     
     const touch = e.touches[0];
     const deltaX = touch.clientX - touchStartX;
@@ -412,10 +427,10 @@ document.getElementById('game-board').addEventListener('touchmove', (e) => {
     
     // タッチ移動時のデフォルトの動作を防ぐ
     e.preventDefault();
-});
+}, { passive: false });
 
-document.getElementById('game-board').addEventListener('touchend', (e) => {
-    if (!currentPiece || isPaused) return;
+document.querySelector('.container').addEventListener('touchend', (e) => {
+    if (isPaused) return;
     
     const touch = e.changedTouches[0];
     const deltaX = touch.clientX - touchStartX;
@@ -443,7 +458,7 @@ document.getElementById('game-board').addEventListener('touchend', (e) => {
     
     // タッチ終了時のデフォルトの動作を防ぐ
     e.preventDefault();
-});
+}, { passive: false });
 
 // ダブルタップによるズームを防止
 document.addEventListener('touchstart', (e) => {
