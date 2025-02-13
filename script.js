@@ -298,6 +298,7 @@ function startGame() {
     // 一時停止状態をリセット
     isPaused = false;
     document.getElementById('pause-btn').textContent = '一時停止';
+    document.querySelector('.container').style.pointerEvents = 'auto';
     
     // 既存のインターバルをクリアして新しいインターバルを設定
     if (gameInterval) {
@@ -322,9 +323,13 @@ function togglePause() {
         clearInterval(gameInterval);
         gameInterval = null;
         pauseBtn.textContent = '再開';
+        // タッチイベントを無効化
+        document.querySelector('.container').style.pointerEvents = 'none';
     } else {
         gameInterval = setInterval(gameLoop, 500);
         pauseBtn.textContent = '一時停止';
+        // タッチイベントを有効化
+        document.querySelector('.container').style.pointerEvents = 'auto';
     }
 }
 
@@ -398,6 +403,13 @@ document.addEventListener('keydown', (e) => {
 
 // タッチイベントの処理を修正
 document.querySelector('.container').addEventListener('touchstart', (e) => {
+    // ボタンやコントロール要素のタッチは無視
+    if (e.target.tagName === 'BUTTON' || 
+        e.target.closest('.button-container') || 
+        e.target.closest('.mobile-controls')) {
+        return;
+    }
+    
     if (!currentPiece || isPaused) return;
     
     const touch = e.touches[0];
@@ -409,6 +421,13 @@ document.querySelector('.container').addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 document.querySelector('.container').addEventListener('touchmove', (e) => {
+    // ボタンやコントロール要素のタッチは無視
+    if (e.target.tagName === 'BUTTON' || 
+        e.target.closest('.button-container') || 
+        e.target.closest('.mobile-controls')) {
+        return;
+    }
+    
     if (!currentPiece || isPaused) return;
     
     const touch = e.touches[0];
@@ -438,6 +457,13 @@ document.querySelector('.container').addEventListener('touchmove', (e) => {
 }, { passive: false });
 
 document.querySelector('.container').addEventListener('touchend', (e) => {
+    // ボタンやコントロール要素のタッチは無視
+    if (e.target.tagName === 'BUTTON' || 
+        e.target.closest('.button-container') || 
+        e.target.closest('.mobile-controls')) {
+        return;
+    }
+    
     if (!currentPiece || isPaused) return;
     
     const touch = e.changedTouches[0];
