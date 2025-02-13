@@ -130,6 +130,8 @@ body {
     justify-content: center;
     align-items: flex-start;
     gap: 12px;
+    width: fit-content;
+    margin: 0 auto;
 }
 
 .side-panel {
@@ -166,6 +168,7 @@ body {
     border: 4px solid #00f;
     position: relative;
     box-shadow: inset 0 0 10px #00f;
+    overflow: visible;
 }
 
 .tetromino {
@@ -235,6 +238,7 @@ body {
     padding: 8px;
     box-shadow: inset 0 0 5px #00f;
     margin-top: 12px;
+    display: block;
 }
 
 .controls-guide p {
@@ -264,37 +268,32 @@ body {
     }
 
     .container {
-        padding: 2px;
-        max-width: 95vw;
-        max-height: 95vh;
-        touch-action: none;
-        user-select: none;
-        -webkit-user-select: none;
-        -webkit-touch-callout: none;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        padding: 8px;
+        border-width: 2px;
     }
 
     .game-container {
-        gap: 2px;
-        transform-origin: top center;
-        touch-action: none;
+        gap: 4px;
         width: fit-content;
-    }
-
-    .side-panel {
-        gap: 2px;
-        width: calc(var(--block-size) * 4);
+        margin: 0 auto;
     }
 
     #game-board {
         width: calc(var(--block-size) * 10);
         height: calc(var(--block-size) * 20);
-        border: 1px solid #00f;
-        overflow: hidden;
-        position: relative;
+        border: 2px solid #00f;
         margin: 0 auto;
+    }
+
+    .tetromino {
+        width: var(--block-size);
+        height: var(--block-size);
+        border: 1px solid #0ff;
+    }
+
+    .side-panel {
+        gap: 2px;
+        width: calc(var(--block-size) * 4);
     }
 
     .hold-box, .next-box {
@@ -311,14 +310,6 @@ body {
         width: calc(var(--block-size) * 3);
         height: calc(var(--block-size) * 3);
         position: relative;
-    }
-
-    .tetromino {
-        width: var(--block-size);
-        height: var(--block-size);
-        border: 1px solid #0ff;
-        position: absolute;
-        box-sizing: border-box;
     }
 
     .preview-tetromino {
@@ -365,6 +356,15 @@ body {
         border: 1px solid #00f;
         box-shadow: inset 0 0 5px #00f;
     }
+    
+    /* モバイル表示時にPC版の操作方法を非表示 */
+    .controls-guide {
+        display: none;
+    }
+    
+    .controls {
+        display: none;
+    }
 }
 
 /* デスクトップではモバイルコントロールを非表示 */
@@ -380,8 +380,22 @@ body {
     font-size: min(10px, 3vw);
 }
 
+/* PC版の操作方法はデフォルトで表示 */
+.controls-guide {
+    display: block;
+}
+
 @media (max-width: 768px) {
     .touch-controls {
         display: block;
+    }
+    
+    /* モバイル表示時にPC版の操作方法を非表示 */
+    .controls-guide {
+        display: none;
+    }
+    
+    .controls {
+        display: none;
     }
 } 
