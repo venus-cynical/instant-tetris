@@ -16,6 +16,9 @@ let touchStartX = null;
 let touchStartY = null;
 const SWIPE_THRESHOLD = 30; // スワイプを検知する最小距離（ピクセル）
 
+// グローバル変数として実際のブロックサイズを保持
+let currentBlockSize = BLOCK_SIZE;
+
 const COLORS = [
     '#00f0f0', // シアン (I)
     '#f0f000', // イエロー (O)
@@ -47,6 +50,20 @@ function createPiece() {
     };
 }
 
+function updateBlockSize() {
+    // モバイル判定
+    if (window.innerWidth <= 768) {
+        // モバイル版のブロックサイズを計算
+        currentBlockSize = Math.min((window.innerWidth * 0.035), 24);
+    } else {
+        currentBlockSize = BLOCK_SIZE;
+    }
+}
+
+// 初期化時とリサイズ時にブロックサイズを更新
+window.addEventListener('resize', updateBlockSize);
+updateBlockSize();
+
 function drawBoard() {
     const gameBoard = document.getElementById('game-board');
     gameBoard.innerHTML = '';
@@ -57,8 +74,8 @@ function drawBoard() {
             if (board[y][x]) {
                 const block = document.createElement('div');
                 block.className = 'tetromino';
-                block.style.left = x * BLOCK_SIZE + 'px';
-                block.style.top = y * BLOCK_SIZE + 'px';
+                block.style.left = x * currentBlockSize + 'px';
+                block.style.top = y * currentBlockSize + 'px';
                 block.style.background = `linear-gradient(45deg, ${board[y][x]}, ${adjustBrightness(board[y][x], 40)})`;
                 block.style.borderColor = adjustBrightness(board[y][x], 60);
                 gameBoard.appendChild(block);
@@ -73,8 +90,8 @@ function drawBoard() {
                 if (value) {
                     const block = document.createElement('div');
                     block.className = 'tetromino';
-                    block.style.left = (currentPiece.x + x) * BLOCK_SIZE + 'px';
-                    block.style.top = (currentPiece.y + y) * BLOCK_SIZE + 'px';
+                    block.style.left = (currentPiece.x + x) * currentBlockSize + 'px';
+                    block.style.top = (currentPiece.y + y) * currentBlockSize + 'px';
                     block.style.background = `linear-gradient(45deg, ${currentPiece.color}, ${adjustBrightness(currentPiece.color, 40)})`;
                     block.style.borderColor = adjustBrightness(currentPiece.color, 60);
                     gameBoard.appendChild(block);
@@ -196,7 +213,7 @@ async function clearLines() {
 
     // 消去するラインのブロックにエフェクトを適用
     Array.from(blocks).forEach(block => {
-        const blockY = parseInt(block.style.top) / BLOCK_SIZE;
+        const blockY = parseInt(block.style.top) / currentBlockSize;
         if (linesToClear.includes(blockY)) {
             block.classList.add('clearing');
             
@@ -283,6 +300,28 @@ async function gameOver() {
     alert('ゲームオーバー！ スコア: ' + score);
 }
 
+function togglePause() {
+    // ゲームが開始されていない場合は何もしない
+    if (!gameInterval && !isPaused) return;
+    
+    isPaused = !isPaused;
+    const pauseBtn = document.getElementById('pause-btn');
+    const gameBoard = document.getElementById('game-board');
+    
+    if (isPaused) {
+        clearInterval(gameInterval);
+        gameInterval = null;
+        pauseBtn.textContent = '再開';
+        // ゲームボードのみタッチイベントを無効化
+        gameBoard.style.pointerEvents = 'none';
+    } else {
+        gameInterval = setInterval(gameLoop, 500);
+        pauseBtn.textContent = '一時停止';
+        // ゲームボードのタッチイベントを有効化
+        gameBoard.style.pointerEvents = 'auto';
+    }
+}
+
 function startGame() {
     // ゲームの状態をリセット
     board = Array(BOARD_HEIGHT).fill().map(() => Array(BOARD_WIDTH).fill(0));
@@ -298,7 +337,8 @@ function startGame() {
     // 一時停止状態をリセット
     isPaused = false;
     document.getElementById('pause-btn').textContent = '一時停止';
-    document.querySelector('.container').style.pointerEvents = 'auto';
+    const gameBoard = document.getElementById('game-board');
+    gameBoard.style.pointerEvents = 'auto';
     
     // 既存のインターバルをクリアして新しいインターバルを設定
     if (gameInterval) {
@@ -310,27 +350,6 @@ function startGame() {
     drawPreviewPiece(nextPiece, document.getElementById('next-piece'));
     drawPreviewPiece(holdPiece, document.getElementById('hold-piece'));
     drawBoard();
-}
-
-function togglePause() {
-    // ゲームが開始されていない場合は何もしない
-    if (!gameInterval && !isPaused) return;
-    
-    isPaused = !isPaused;
-    const pauseBtn = document.getElementById('pause-btn');
-    
-    if (isPaused) {
-        clearInterval(gameInterval);
-        gameInterval = null;
-        pauseBtn.textContent = '再開';
-        // タッチイベントを無効化
-        document.querySelector('.container').style.pointerEvents = 'none';
-    } else {
-        gameInterval = setInterval(gameLoop, 500);
-        pauseBtn.textContent = '一時停止';
-        // タッチイベントを有効化
-        document.querySelector('.container').style.pointerEvents = 'auto';
-    }
 }
 
 document.addEventListener('keydown', (e) => {
@@ -410,6 +429,11 @@ document.querySelector('.container').addEventListener('touchstart', (e) => {
         return;
     }
     
+    // ゲームボード以外のタッチは無視
+    if (!e.target.closest('#game-board')) {
+        return;
+    }
+    
     if (!currentPiece || isPaused) return;
     
     const touch = e.touches[0];
@@ -425,6 +449,11 @@ document.querySelector('.container').addEventListener('touchmove', (e) => {
     if (e.target.tagName === 'BUTTON' || 
         e.target.closest('.button-container') || 
         e.target.closest('.mobile-controls')) {
+        return;
+    }
+    
+    // ゲームボード以外のタッチは無視
+    if (!e.target.closest('#game-board')) {
         return;
     }
     
@@ -461,6 +490,11 @@ document.querySelector('.container').addEventListener('touchend', (e) => {
     if (e.target.tagName === 'BUTTON' || 
         e.target.closest('.button-container') || 
         e.target.closest('.mobile-controls')) {
+        return;
+    }
+    
+    // ゲームボード以外のタッチは無視
+    if (!e.target.closest('#game-board')) {
         return;
     }
     
