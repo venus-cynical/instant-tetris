@@ -389,7 +389,7 @@ document.addEventListener('keydown', (e) => {
 
 // タッチイベントの処理を追加
 document.querySelector('.container').addEventListener('touchstart', (e) => {
-    if (isPaused) return;
+    if (!currentPiece) return;
     
     const touch = e.touches[0];
     touchStartX = touch.clientX;
@@ -400,7 +400,7 @@ document.querySelector('.container').addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 document.querySelector('.container').addEventListener('touchmove', (e) => {
-    if (isPaused) return;
+    if (!currentPiece) return;
     
     const touch = e.touches[0];
     const deltaX = touch.clientX - touchStartX;
@@ -430,7 +430,7 @@ document.querySelector('.container').addEventListener('touchmove', (e) => {
 }, { passive: false });
 
 document.querySelector('.container').addEventListener('touchend', (e) => {
-    if (isPaused) return;
+    if (!currentPiece) return;
     
     const touch = e.changedTouches[0];
     const deltaX = touch.clientX - touchStartX;
